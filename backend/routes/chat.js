@@ -16,4 +16,19 @@ router.get('/:room', async (req, res) => {
     }
 });
 
+// Send message
+router.post('/:room', async (req, res) => {
+    try {
+        const message = new Message({
+            room: req.params.room,
+            user: req.user.id,
+            message: req.body.message
+        });
+        await message.save();
+        res.json(message);
+    } catch (err) {
+        res.status(500).send('Server error');
+    }
+});
+
 module.exports = router;

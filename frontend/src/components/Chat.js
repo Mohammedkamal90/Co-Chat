@@ -14,18 +14,18 @@ const Chat = () => {
             });
             setMessages(res.data);
         };
-    
+
         fetchMessages();
-    
+
         socket.emit('joinRoom', { room: 'general' });
-    
+
         socket.on('message', message => {
             setMessages(messages => [...messages, message]);
         });
-    
+
         return () => socket.disconnect();
     }, [socket]);
-    
+
     const sendMessage = async (e) => {
         e.preventDefault();
         if (newMessage.trim()) {
@@ -38,11 +38,11 @@ const Chat = () => {
     };
 
     return (
-        <div>
+        <div className="chat-container">
             <h1>Chat Room</h1>
-            <div>
+            <div className="chat-messages">
                 {messages.map(msg => (
-                    <div key={msg._id}>
+                    <div key={msg._id} className="chat-message">
                         <strong>{msg.user.username}</strong>: {msg.message}
                     </div>
                 ))}
