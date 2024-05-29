@@ -25,7 +25,7 @@ const Chat = () => {
     
         return () => socket.disconnect();
     }, [socket]);
-
+    
     const sendMessage = async (e) => {
         e.preventDefault();
         if (newMessage.trim()) {

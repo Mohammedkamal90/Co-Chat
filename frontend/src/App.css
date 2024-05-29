@@ -21,7 +21,7 @@ body {
 
 .chat-message {
   padding: 10px;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #0a5472;
 }
 
 @media (max-width: 600px) {
