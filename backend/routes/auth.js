@@ -22,17 +22,17 @@ router.post('/register', async (req, res) => {
 });
 
 // Exisiting Login
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+router.post('/updateProfile', authMiddleware, async (req, res) => {
+    const { bio, profilePicture } = req.body;
     try {
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ msg: 'User does not exist' });
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+        user.bio = bio || user.bio;
+        user.profilePicture = profilePicture || user.profilePicture;
+        await user.save();
 
-        const token = jwt.sign({ id: user._id }, 'secret');
-        res.json({ token, user: { id: user._id, username: user.username, email } });
+        res.json(user);
     } catch (err) {
         res.status(500).send('Server error');
     }
