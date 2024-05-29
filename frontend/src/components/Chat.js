@@ -14,13 +14,15 @@ const Chat = () => {
             });
             setMessages(res.data);
         };
-
+    
         fetchMessages();
-
+    
+        socket.emit('joinRoom', { room: 'general' });
+    
         socket.on('message', message => {
             setMessages(messages => [...messages, message]);
         });
-
+    
         return () => socket.disconnect();
     }, [socket]);
 
