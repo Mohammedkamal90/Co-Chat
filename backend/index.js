@@ -19,6 +19,15 @@ app.use('/api/chat', chatRoutes);
 
 io.on('connection', (socket) => {
     console.log('a user connected');
+    
+    socket.on('joinRoom', ({ room }) => {
+        socket.join(room);
+    });
+
+    socket.on('message', (message) => {
+        io.to(message.room).emit('message', message);
+    });
+
     socket.on('disconnect', () => {
         console.log('user disconnected');
     });
