@@ -1,39 +1,94 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
+const authMiddleware = require('../middleware/authMiddleware'); // Import authMiddleware
+const User = require('../models/User');
 
-// New user Register
+// Register user route
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
-    try {
-        let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ msg: 'User already exists' });
 
-        user = new User({ username, email, password: await bcrypt.hash(password, 10) });
+    try {
+        // Check if user already exists
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ msg: 'User already exists' });
+        }
+
+        // Create new user
+        user = new User({
+            username,
+            email,
+            password
+        });
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+
+        // Save user to database
         await user.save();
 
-        const token = jwt.sign({ id: user._id }, 'secret');
-        res.json({ token, user: { id: user._id, username, email } });
+        // Generate JWT token
+        const payload = {
+            user: {
+                id: user.id
+            }
+        };
+
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
+            if (err) throw err;
+            res.json({ token });
+        });
     } catch (err) {
+        console.error(err.message);
         res.status(500).send('Server error');
     }
 });
 
-// Exisiting Login
-router.post('/updateProfile', authMiddleware, async (req, res) => {
-    const { bio, profilePicture } = req.body;
+// Login user route
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
     try {
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ msg: 'User not found' });
+        // Check if user exists
+        let user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid credentials' });
+        }
 
-        user.bio = bio || user.bio;
-        user.profilePicture = profilePicture || user.profilePicture;
-        await user.save();
+        // Validate password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid credentials' });
+        }
 
-        res.json(user);
+        // Generate JWT token
+        const payload = {
+            user: {
+                id: user.id
+            }
+        };
+
+        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
+            if (err) throw err;
+            res.json({ token });
+        });
     } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+});
+
+// Update profile route (protected)
+router.post('/updateProfile', authMiddleware, async (req, res) => {
+    try {
+        // Update user profile logic here...
+
+        res.json({ msg: 'Profile updated successfully' });
+    } catch (err) {
+        console.error(err.message);
         res.status(500).send('Server error');
     }
 });
